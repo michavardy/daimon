@@ -136,14 +136,18 @@ pip install daimon-cli
 ## Execution Lifecycle
 
 1. Validate
+
     a. remote connection
     b. remote docker
     c. repository credentials
     d. config integrity
+
 2. package and transfer:
+
     a. zip project source
     b. zip schema constraints
     c. upload artifacts to remote host
+    
 3. env setup
     a. clone OpenHands agent runtime
     b. build docker image
