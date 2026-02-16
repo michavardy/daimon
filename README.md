@@ -114,8 +114,8 @@ commit_rules.md
 pr_format.md
 ```
 **Note** 
-- Schema is imutable during phase
-- Schema gets updated locally per phase and is merged into main branch at the end
+- Schema is imutable during **Phase**
+- Schema gets updated locally per **Phase** and is merged into main branch at the end
 - Schema may be pulled from main branch into .config/schema
 - Changes to schema produce schema_diff.patch
 
@@ -161,7 +161,7 @@ pip install daimon-cli
 
     c. inject env variables
 
-4. Phase 1: Planning
+4. **Phase** 1: Planning
 
     a. generate structured plan
 
@@ -173,7 +173,7 @@ pip install daimon-cli
 
             i. update schema
 
-            ii. move to phase 2
+            ii. move to **Phase** 2
 
         if modification:
 
@@ -185,9 +185,9 @@ pip install daimon-cli
 
             i. update schema
 
-            ii. move to phase 4
+            ii. move to **Phase** 4
 
-5. Phase 2: Code Execution
+5. **Phase** 2: Code Execution
 
     a. apply modification plan
 
@@ -203,7 +203,7 @@ pip install daimon-cli
 
             i. update schema
 
-            ii. move to phase 3
+            ii. move to **Phase** 3
 
         if modifications:
 
@@ -215,11 +215,11 @@ pip install daimon-cli
 
             i. update schema
 
-            ii. move back to phase 1
+            ii. move back to **Phase** 1
 
 
 
-6. phase 3 - testing and validation
+6. **Phase** 3 - testing and validation
 
     a. Generate comprehensive unit tests
 
@@ -243,7 +243,7 @@ pip install daimon-cli
 
             i. update schema
 
-            ii. move back to phase 2
+            ii. move back to **Phase** 2
 
         if all tests pass:
 
@@ -257,7 +257,7 @@ pip install daimon-cli
 
             i. update schema
 
-            ii. move to phase 4
+            ii. move to **Phase** 4
 
         if modification:
 
@@ -269,9 +269,9 @@ pip install daimon-cli
 
             i. update schema
 
-            ii. move back to phase 1
+            ii. move back to **Phase** 1
 
-7. phase 4 - cleanup
+7. **Phase** 4 - cleanup
 
     a. archive logs
 
