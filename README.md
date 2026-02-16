@@ -138,80 +138,149 @@ pip install daimon-cli
 1. Validate
 
     a. remote connection
+
     b. remote docker
+
     c. repository credentials
+
     d. config integrity
 
 2. package and transfer:
 
     a. zip project source
+
     b. zip schema constraints
-    c. upload artifacts to remote host
     
+    c. upload artifacts to remote host
+
 3. env setup
+
     a. clone OpenHands agent runtime
+
     b. build docker image
+
     c. inject env variables
+
 4. Phase 1: Planning
+
     a. generate structured plan
+
     b. open draft PR 
+
         - generates plan.md for approval
+
         if success:
+
             i. update schema
+
             ii. move to phase 2
+
         if modification:
+
             i. update schema
+
             ii. iterate again
+
         if rejected:
+
             i. update schema
+
             ii. move to phase 4
+
 5. Phase 2: Code Execution
+
     a. apply modification plan
+
     b. run incremental tests
+
     c. run linting 
+
     d. run static analysis tests
+
     e. Update PR
+
         if success:
+
             i. update schema
+
             ii. move to phase 3
+
         if modifications:
+
             i. update schema
+
             ii. iterate
+
         if rejected:
+
             i. update schema
+
             ii. move back to phase 1
 
+
+
 6. phase 3 - testing and validation
+
     a. Generate comprehensive unit tests
+
     b. write edge case tests where appropiate
+
     c. write integration tests convering all flows
+
     d. write scale tests
+
     e. run full test suite
+
         if tests fail and problem is with test:
+
             i. update schema
+
             ii. rewrite tests
+
             iii. iterate
+
         if tests fail and problem is with code execution
+
             i. update schema
+
             ii. move back to phase 2
+
         if all tests pass:
+
             i. update schema
+
             ii. write test report, add to logs
+
     f. Update PR
+
         if success:
+
             i. update schema
+
             ii. move to phase 4
+
         if modification:
+
             i. update schema
+
             ii. iterate
+
         if rejected:
+
             i. update schema
+
             ii. move back to phase 1
+
 7. phase 4 - cleanup
+
     a. archive logs
+
     b. keep updated schema
+
     c. change MR / PR from draft to real
+
     d. remove remote container
+
     e. remove temp artifacts
 
 ## Logs and Observability
@@ -238,6 +307,7 @@ Example
 logs are also available in github or gitlab draft branches
 
 ## Security
+
 - no direct pushes to human branches
 - all changes via PR/MR
 - secrets injected at runtime only via .env (not stored in git)
@@ -246,6 +316,7 @@ logs are also available in github or gitlab draft branches
 - schema versioned and hashed
 
 ## Roadmap
+
 - Coach agent that updates schema every feedback cycle
 - deep graph rag
 - multi-layer rag extraction updated by schema_diff
