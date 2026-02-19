@@ -43,6 +43,21 @@ From inside a project directory, Daimon:
 
 9. Stores structured logs for audit and replay
 
+## Developers
+
+### activate environment
+```bash
+uv sync
+source .venv/Scripts/activate
+python -m pip install -e .
+python -m daimon
+```
+### without activating env
+```bash
+uv run python -m daimon
+```
+
+
 ## Usage
 
 
@@ -100,19 +115,245 @@ reference_docs:
 
 **Note**: All secrets must be kept in .env in project dir including LLM key
 
+### Schema: deterministic agent runtime spec
 
-### Schema Example Structure
+#### Schema includes
 
-file_path: `~/.config/daimon/schema`
+- Memory (RAG)
+- Extraction (RECALL)
+- Orchestration (GRAPH MODEL)
+- Prompt (DIRECTION)
+- Policy (RULES)
 
+#### Location
+`~/.config/daimon/schema`
+
+#### Contents
 ```bash
-planning.md
-architecture.md
+rag/
+    databases.yml
+    databases/
+        <db1>
+        <db2>
+        ...
+graph/
+    nodes.yml
+    edges.yml
+    prompts/
+policies/
+    .../
+```
+
+#### Master Schema
+
+```yml
+version: 2
+schema_hash: auto
+
+rag:
+  config_path: rag/
+
+graph:
+  nodes: graph/nodes.yml
+  edges: graph/edges.yml
+
+agents:
+  path: agents/
+
+policies:
+  path: policies/
+
+immutability:
+  frozen_during_phase: true
+
+logging:
+  full_llm_io: true
+  retrieval_trace: true
+  graph_transitions: true
+
+```
+
+#### Rag Layer: Declarative Knownlage System
+
+Location: `schema/rag/databases.yml`
+
+```yaml
+databases:
+    - name: project_code
+    embedding_model: text-embedding-3-large
+    location: schema/data/rag/project_code.sqlite3
+    source:
+        type: filesystem
+        path: /
+        include:
+            - "src/**/*.py"
+            - "docs/**/*.md"
+        exclude:
+            - "tests/**"
+    chunking:
+        logic_description: "this is a description"
+        method: "<python-code-for-chunking>" # iterates over all documents
+    retrieval:
+        logic-description: "this is a description"
+        method: "<python-code-for-retrieval>" # takes only input text as argument
+
+   - name: external_refs
+    embedding_model: text-embedding-3-large
+    location: schema/data/rag/project_code.sqlite3
+    source:
+        type: url
+        urls: []
+    chunking:
+        logic_description: "this is a description"
+        method: "<python-code-for-chunking>"
+    retrieval:
+        logic-description: "this is a description"
+        method: "<python-code-for-retrieval>" # takes only input text as argument
+```
+### Orchestration Layer: Declarative Graph
+
+#### Nodes
+
+Location: `schema/graph/nodes.yml`
+
+Arguments:
+    All Nodes have an input prompt
+    Tracer 
+
+```yml
+nodes:
+    - name: planner
+    prompts: 
+        - `schema/graph/prompts/planner.md`
+    rags: 
+        - `schema/rag/databases/planner.faiss`
+
+    - name: coder
+    prompts: 
+        - `schema/graph/prompts/coder.md`
+    rags: 
+        - `schema/rag/databases/coder.faiss`
+
+    - name: tester
+    prompts: 
+        - `schema/graph/prompts/tester.md`
+    rags: 
+        - `schema/rag/databases/tester.faiss`
+
+    - name: reviewer
+    prompts: 
+        - `schema/graph/prompts/reviewer.md`
+    rags: 
+        - `schema/rag/databases/reviewer.faiss`
+```
+#### Edges: conditional logic
+
+Location: `schema/graph/edges.yml`
+
+Possible Arguments:
+    - input prompt
+    - code review
+    - test output
+    - tracer
+
+Consider a serialized state
+
+```yml
+edges:
+    - from: planner
+    to: coder
+    logic_description: "human readable condition"
+    method: "<python-method-conditional-edge>"
+    
+    - from: planner
+    to: planner
+    logic_description: "human readable condition"
+    default: True
+
+  - from: coder
+    to: tester
+    logic_description: "human readable condition"
+    method: "<python-method-conditional-edge>"
+
+  - from: coder
+    to: planner
+    logic_description: "human readable condition"
+    default: True
+
+
+  - from: tester
+    to: reviewer
+    logic_description: "human readable condition"
+    method: "<python-method-conditional-edge>"
+
+  - from: tester
+    to: coder
+    logic_description: "human readable condition"
+    method: "<python-method-conditional-edge>"
+
+  - from: reviewer
+    to: cleanup
+    logic_description: "human readable condition"
+    method: "<python-method-conditional-edge>"
+```
+
+#### Prompts
+
+Location: `schema/graph/prompts/planner.md`
+
+Arguments:
+    - input prompt
+    - code review
+    - test output
+    - tracer
+Rags:
+    - planner.faiss
+    - schema.faiss
+    - project_code.faiss
+    - tracer.faiss
+
+Prompt Injections:
+
+
+Example:
+
+```markdown
+# Planner Agent
+
+Role:
+You are responsible for generating structured execution plans.
+
+Constraints:
+- Must obey schema policies.
+- Must output JSON plan format.
+- Must define atomic steps.
+
+## Schema Policy:
+{schema rag}
+
+## Project Code:
+{project code rag}
+
+## Plan:
+{planner rag}
+
+## Memory:
+{tracer rag}
+```
+
+### Policis: Injections or Rag
+```bash
 coding_standards.md
+architecture.md
 testing_policy.md
 commit_rules.md
 pr_format.md
+planning_rules.md
+execution_rules.md
+rag_rules.md
+review_rules.md
 ```
+
 **Note** 
 - Schema is imutable during **Phase**
 - Schema gets updated locally per **Phase** and is merged into main branch at the end
@@ -216,8 +457,6 @@ pip install daimon-cli
             i. update schema
 
             ii. move back to **Phase** 1
-
-
 
 6. **Phase** 3 - testing and validation
 
