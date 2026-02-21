@@ -2,7 +2,7 @@
 
 Schema-constrained, reproducible, PR-native autonomous agent focused on continual learning.
 
-Daimon is a CLI-driven orchestrator for an OpenHands-style agent that stays inside your project, injects system prompts from merge request feedback, emits atomic plans, and captures every learning cycle without packaging Docker artifacts.
+Daimon is a CLI-driven orchestrator for an OpenHands-style agent that stays inside your project, injects system prompts from merge request feedback, emits atomic plans, and captures every learning cycle.
 
 ## Architecture at a glance
 
@@ -17,10 +17,10 @@ Daimon is a CLI-driven orchestrator for an OpenHands-style agent that stays insi
 
 ### Prerequisites
 
-- `uv` for managing the virtual environment (see `uv.lock` in this repo) so the CLI stays deterministic.
-- An OpenHands SDK installation (e.g., `pip install openhands-agent`) to execute each plan produced by the CLI.
+- `uv` (or `pixi`) for managing the virtual environment (see `uv.lock` in this repo) so the CLI stays deterministic.
+- Access to an OpenHands runtime or SDK; integration is evolving, so consult the [OpenHands agent interface](docs/openhands-agent-interface.md) for the current wiring guidance.
 - A GitHub or GitLab repository configured to receive the PR/MR opened by the OpenHands runtime.
-- Project-local `daimon.yml`, `.env`, `merge_request_feedback.md`, and prompt/plan files described in [OpenHands agent interface](docs/openhands-agent-interface.md).
+- Project-local `daimon.yml`, `.env`, `merge_request_feedback.md`, and the prompt/plan files described in [OpenHands agent interface](docs/openhands-agent-interface.md).
 
 ### Installation
 
@@ -52,7 +52,23 @@ Run inside the project directory that contains `daimon.yml`, `.env`, and the fee
 
 ### `daimon.yml`
 
-Describes the OpenHands persona, goal, prompt templates, plan file paths, and how the CLI should summarize `merge_request_feedback.md`. Keep secrets out of this YAML—place them in `.env` so the CLI and SDK can pull them securely.
+Bootstraps the minimal OpenHands runtime configuration:
+
+```
+agent:
+  name: daimon-openhands
+  runtime: openhands.sdk.agent.Agent
+  interface_doc: docs/openhands-agent-interface.md
+schema:
+  path: .schema
+  minimal: true
+feedback:
+  log: merge_request_feedback.md
+task: |
+  Improve the OpenHands agent with the latest merge request feedback.
+```
+
+`agent` declares the runtime, `schema.path` points to the minimal schema that gets refreshed before every run, `feedback.log` tells the CLI where to read reviewer comments, and `task` becomes the `Task` field injected into `system_prompt.md`. Keep secrets out of this YAML—place them in `.env` so the CLI and SDK can pull them securely.
 
 ### `.env`
 
