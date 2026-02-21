@@ -2,26 +2,28 @@
 
 Schema-constrained, reproducible, PR-native autonomous software engineering.
 
-Daimon is a CLI-driven autonomous coding agent that runs inside your project, ships code to a remote Docker host over SSH, and drives development tasks end-to-end. It plans, executes, tests, and publishes PRs/MRs with full execution logs while strictly enforcing schema constraints.
+Daimon is a CLI-driven autonomous coding agent that lives inside your project, ships source and schema to a remote SSH+Docker host, and drives development from planning through testing and PR/MR publication while keeping every decision fully auditable.
 
 ## Architecture at a glance
 
-- **Models** (see `docs/models.md`): primitives such as queries, archives, directives, and listeners form the runtime data structures. Memory, RAG datasets, and chunking/extraction models are registered by name so every agent in the stack can look up context without carrying global state.
-- **Orchestration** (see `docs/orchestration.md`): prompts, agents, directive emitters, and actions are described in YAML. Each phase (planning, coding, testing, review) initializes a stack of directives that drive which agents execute which actions and when new directives fire.
-- **Policies** (see `docs/policies.md`): coding, architectural, testing, review, and execution rules are modeled as injectables or RAG documents inside prompts so every LLM call is evaluated according to the latest guidelines.
-- **Trace** (see `docs/trace.md`): each directive emits a complete log of inputs, outputs, memory and archive interactions, and artifact snapshots. Traces allow replaying, auditing, and debugging every autonomous session.
-- **Roadmap** (see `docs/roadmap.md`): future work includes evolutionary branch directives, richer multi-model experimentation, and more resilient schema workflows.
+- **[Models](docs/models.md)** document the runtime primitives (queries, archives, directives, listeners, and stacks) plus the registries for actions, chunking/extraction, and retrieval that agents use to build structured plans.
+- **[Orchestration](docs/orchestration.md)** explains how prompts, action maps, and directive emitters form the phase graph so that planning, coding, testing, and review agents fire in the right order with concrete success criteria.
+- **[Policies](docs/policies.md)** defines the rules that get injected into prompts or RAG documents to keep code quality, testing, and review standards consistent across every agentic action.
+- **[Trace](docs/trace.md)** captures the full directive lifecycle, including inputs, outputs, memory and archive interactions, and execution artifacts so every autonomous step can be audited or replayed.
+- **[Roadmap](docs/roadmap.md)** outlines upcoming ideas such as evolutionary branch directives and richer multi-model experimentation to strengthen autonomous resilience.
 
-## Prerequisites
+## Getting started
 
-- `uv` for managing the virtual environment (see `uv.lock`).
-- Access to a remote SSH host with Docker.
-- A GitHub or GitLab repository ready to receive autonomous PRs/MRs.
-- A `daimon.yml` config file plus a `.env` file containing secrets (SSH password/key, PAT, LLM key, etc.).
+### Prerequisites
 
-## Installation
+- `uv` for managing the virtual environment (see `uv.lock` in this repo).
+- A reachable SSH host with Docker installed so Daimon can build and execute inside an isolated container.
+- A GitHub or GitLab repository configured to receive PRs/MRs from Daimon.
+- Project-local `daimon.yml` and `.env` files describing the run configuration and secrets.
 
-### For developers
+### Installation
+
+#### For developers
 
 ```bash
 git clone <repo>
@@ -30,65 +32,64 @@ source .venv/Scripts/activate
 pip install -e .
 ```
 
-### Running without an activated environment
+#### Running without an activated environment
 
 ```bash
 uv run python -m daimon
 ```
 
-## Configuration
-
-Daimon relies on two documents in the project root:
-
-### `daimon.yml`
-
-- `remote_environment`: SSH user/host and optional encrypted keys (credentials live only in `.env`).
-- `repository`: remote URL, default branch, and PAT reference.
-- `approval`: optional override for plan/code/tests approvals (defaults to required).
-- `task`: multi-line task description with requirements/acceptance criteria.
-- `reference_docs`: optional list of URLs or local markdown used during planning/code.
-
-### `.env`
-
-Supports secrets referenced from `daimon.yml`, including `PERSONAL_ACCESS_TOKEN`, `REMOTE_PASSWORD`, and any LLM API keys. Secrets are injected at runtime and never committed.
-
-### Schema directory
-
-`~/.config/daimon/schema` defines the runtime spec that governs planning, execution, testing, policies, and logging. Key directories include `rag/`, `graph/`, `agents/`, and `policies/`. The schema is immutable during a phase but can be incrementally updated and merged at phase boundaries.
-
-## Typical execution lifecycle
-
-1. **Validate** remote connectivity, Docker availability, credentials, and config integrity.
-2. **Package & transfer** source, schema, and instructions to the remote host.
-3. **Environment setup**: clone the OpenHands agent runtime, build the Docker image, and inject environment variables.
-4. **Phase 1 – Planning**: produce a structured plan, open a draft PR/MR, and refresh the schema on success or iteration.
-5. **Phase 2 – Coding**: apply planned changes, run incremental tests, linting, and static analysis, update the PR, and evolve the schema.
-6. **Phase 3 – Testing & validation**: generate and run comprehensive tests, log the results, and loop back if failures occur.
-7. **Phase 4 – Cleanup**: archive logs, keep the schema current, promote the PR/MR out of draft, and tear down remote artifacts.
-
-Every phase updates structured logs (`.daimon_logs/run_<timestamp>/...`) so human reviewers can inspect prompts, retrieval traces, execution output, diffs, and review metadata.
-
-## Usage
+### Running Daimon
 
 ```bash
 cd <project_dir>
 daimon run
 ```
 
-- Run inside the project directory containing `daimon.yml` and `.env`.
-- The CLI packages the project, ships it to the remote Docker host, executes the autonomous plan, and opens PRs/MRs on completion.
+Run inside the project directory that contains `daimon.yml` and `.env`. The CLI packages your source and schema, transfers them to the remote Docker host, executes the autonomous plan, records all logs, and opens a PR/MR when the workflow completes.
+
+## Configuration
+
+### `daimon.yml`
+
+Defines the remote environment (`remote_environment`), repository metadata (`repository`), approval overrides, the multi-line `task` description, and optional `reference_docs` that Daimon can fetch during planning. Keep secrets off the YAML and point to values stored in `.env`.
+
+### `.env`
+
+Holds secrets referenced from `daimon.yml`, such as `PERSONAL_ACCESS_TOKEN`, `REMOTE_PASSWORD`, encrypted SSH keys, and any LLM credentials. Values are injected at runtime and never committed.
+
+### Schema directory
+
+`~/.config/daimon/schema` stores the immutable runtime spec for each phase. Key subdirectories include `rag/`, `graph/`, `agents/`, and `policies/` so agents can look up directives, prompts, and constraints without carrying mutable global state.
+
+## Execution lifecycle
+
+1. **Validate** remote connectivity, Docker availability, credentials, and config integrity.
+2. **Package & transfer** the local source, schema, and instructions to the remote host.
+3. **Environment setup**: clone the OpenHands agent runtime, build the Docker image, and inject environment variables.
+4. **Phase 1 – Planning**: emit directives, craft a structured plan, open a draft PR/MR, and refresh the schema if the plan is accepted.
+5. **Phase 2 – Coding**: apply planned changes, run incremental tests and linters, update the branch, and evolve the schema as progress is made.
+6. **Phase 3 – Testing & validation**: run comprehensive tests, capture results, and loop back if failures occur.
+7. **Phase 4 – Cleanup**: archive logs, keep the schema in sync, promote the PR/MR out of draft, and tear down remote artifacts.
+
+See [Orchestration](docs/orchestration.md) for the full mapping between agents, prompts, actions, and directive emitters that powers this lifecycle.
 
 ## Logs & observability
 
-Logs are written under `.daimon_logs/run_<timestamp>/` with subdirectories for LLM I/O, retrieval traces, execution stdout/stderr, git diffs, and review metadata. Logs are also stored on the remote GitHub/GitLab draft branch.
+`.daimon_logs/run_<timestamp>/` contains directories for LLM I/O, retrieval traces, execution stdout/stderr, git diffs, and review metadata. Traces are also stored on the remote draft branch so reviewers can replay every response. Refer to [Trace](docs/trace.md) for the trace format and auditing guidance.
 
 ## Security & guarantees
 
-- No direct pushes to mainline branches—only PRs/MRs.
+- No direct pushes to mainline branches—Daimon always opens PRs/MRs.
 - Secrets live solely in `.env` and are masked in logs and remote containers.
-- The remote container is isolated, and the schema is versioned/hashed to prevent drift.
+- The remote container is isolated, and the schema is versioned and hashed to prevent drift.
+- Policies listed in [Policies](docs/policies.md) are injected into prompts or referenced via RAG to keep agents compliant.
 
 ## Learn more
 
-- Consult `docs/models.md`, `docs/orchestration.md`, `docs/policies.md`, `docs/trace.md`, and `docs/roadmap.md` for the full runtime spec.
-- Inspect `schema/` under `~/.config/daimon/` after bootstrapping to see how the schema constrains each phase.
+- [Models](docs/models.md): runtime primitives, archives, memories, and action registries.
+- [Orchestration](docs/orchestration.md): prompt templates, agent mappings, and directive emitters.
+- [Policies](docs/policies.md): governance rules for coding, testing, review, and execution.
+- [Trace](docs/trace.md): audit-friendly logs for every directive, action, and artifact.
+- [Roadmap](docs/roadmap.md): upcoming work on evolutionary branches and multi-model experimentation.
+
+Inspect `schema/` under `~/.config/daimon/` after bootstrapping to see how these documents take effect during each phase.
