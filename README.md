@@ -25,17 +25,51 @@ Daimon is a CLI-driven autonomous coding agent that lives inside your project, s
 
 #### For developers
 
+1. Reads structured task instructions 
+
+2. Loads global schema constraints (markdown-based spec system)
+
+3. Ships code to a remote host via SSH
+
+4. builds a docker in remote host 
+
+5. Executes an autonomous plan:
+    
+    - plan
+    - code
+    - test
+    - cleanup
+
+6. Captures full LLM input/output logs and execution traces
+
+7. Commits changes to a new branch
+
+8. Opens a PR (GitHub) or MR (GitLab) upon completion of every step of autonomy plan with options of skipping approval steps
+
+9. Stores structured logs for audit and replay
+
+## Developers
+
+1. get pixi
 ```bash
-git clone <repo>
-uv sync
-source .venv/Scripts/activate
-pip install -e .
+curl -fsSL https://pixi.sh/install.sh | sh
+```
+**note:** prob add alias to bashrc
+
+2. activate environment
+```bash
+pixi shell
 ```
 
-#### Running without an activated environment
-
+3. build OpenHands Locally
 ```bash
-uv run python -m daimon
+git clone https://github.com/michavardy/OpenHands.git
+cd OpenHands
+python -m build
+```
+4. Install local Openhands
+```bash
+pip install ../OpenHands/dist/openhands_ai-1.4.0-py3-none-any.whl
 ```
 
 ### Running Daimon
