@@ -45,16 +45,26 @@ From inside a project directory, Daimon:
 
 ## Developers
 
-### activate environment
+1. get pixi
 ```bash
-uv sync
-source .venv/Scripts/activate
-python -m pip install -e .
-python -m daimon
+curl -fsSL https://pixi.sh/install.sh | sh
 ```
-### without activating env
+**note:** prob add alias to bashrc
+
+2. activate environment
 ```bash
-uv run python -m daimon
+pixi shell
+```
+
+3. build OpenHands Locally
+```bash
+git clone https://github.com/michavardy/OpenHands.git
+cd OpenHands
+python -m build
+```
+4. Install local Openhands
+```bash
+pip install ../OpenHands/dist/openhands_ai-1.4.0-py3-none-any.whl
 ```
 
 
