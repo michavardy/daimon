@@ -1,0 +1,2 @@
+# trace
+trace is a type of structured document set in which each document added is the complete set of logs, and artifacts of a specific directive.  the logs include directive meta-data,  input and output of any actions, all memory and archive extractions.
